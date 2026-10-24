@@ -61,10 +61,6 @@ class tensor {
     std::transform(data.begin(), data.end(), rhs.data.begin(), data.begin(), std::minus<>{});
     return *this;
   }
-
-
-
-
 };
 
 template<size_t Skip, size_t R>
@@ -151,6 +147,59 @@ template <std::size_t I, std::size_t J, Numeric T, std::size_t... A, std::size_t
     }
     res.raw()[f] = sum;
   }
+  return res;
+}
+
+
+template <std::size_t R>
+constexpr std::size_t product(const std::array<std::size_t, R>& d, std::size_t from, std::size_t to) {
+    std::size_t p = 1;
+    for (std::size_t k = from; k < to; ++k) p *= d[k];
+    return p;
+}
+
+
+template <std::size_t I, std::size_t J, Numeric T, std::size_t... A, std::size_t... B>
+  requires (I < sizeof...(A) && J < sizeof...(B))
+[[nodiscard]] constexpr auto contract1(const tensor<T, A...>& a, const tensor<T, B...>& b) {
+  constexpr std::array<std::size_t, sizeof...(A)> adims{A...};
+  constexpr std::array<std::size_t, sizeof...(B)> bdims{B...};
+  static_assert(adims[I] == bdims[J], "contracted dimensions must match");
+
+  constexpr auto rdims = concat(drop<I>(adims), drop<J>(bdims));
+  using result_t = tensor_from_shape<T, rdims>;
+
+  constexpr std::size_t n         = adims[I];
+  constexpr std::size_t a_before  = product(adims, 0, I);
+  constexpr std::size_t a_after   = product(adims, I + 1, adims.size());
+  constexpr std::size_t b_before  = product(bdims, 0, J);
+  constexpr std::size_t b_after   = product(bdims, J + 1, bdims.size());
+  constexpr std::size_t b_free    = b_before * b_after;
+
+  const auto& A_ = a.raw();
+  const auto& B_ = b.raw();
+  result_t res{};
+  auto& R_ = res.raw();
+
+  for (std::size_t ab = 0; ab < a_before; ++ab) {
+    for (std::size_t aa = 0; aa < a_after; ++aa) {
+      const std::size_t r_base = (ab * a_after + aa) * b_free;
+
+      for (std::size_t s = 0; s < n; ++s) {
+        const T x = A_[(ab * n + s) * a_after + aa];
+
+        for (std::size_t bb = 0; bb < b_before; ++bb) {
+          const std::size_t b_base = (bb * n + s) * b_after;
+          const std::size_t r_row  = r_base + bb * b_after;
+
+          for (std::size_t ba = 0; ba < b_after; ++ba) {
+            R_[r_row + ba] += x * B_[b_base + ba];
+          }
+        }
+      }
+    }
+  }
+
   return res;
 }
 
