@@ -1,6 +1,6 @@
 #pragma once
 
-#include "config.hpp"
+#include "../config.hpp"
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
@@ -8,6 +8,7 @@
 #include <ostream>
 #include <sys/types.h>
 #include <iostream>
+
 
 template<Numeric T, size_t N = kspacetime_dim, size_t M = kspacetime_dim>
 class rank2_tensor {

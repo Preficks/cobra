@@ -4,26 +4,46 @@
 #include <concepts>
 #include <cstddef>
 #include <functional>
-#include <initializer_list>
 #include <array>
 #include <ostream>
 #include <sys/types.h>
-#include <iostream>
 #include <utility>
 
 template <Numeric T, size_t... Dims>
 class tensor {
+  public:
   static constexpr size_t rank          = sizeof...(Dims);
   static constexpr size_t size         = (1 * ... * Dims);
   static constexpr std::array<size_t, rank> dims{Dims...};
 
+  private:
   std::array<T, size> data;
 
   public:
 
+  constexpr auto& raw() { return data; }
+  constexpr const auto& raw() const { return data; }
+
+  constexpr tensor() = default;
+
+  template <std::convertible_to<T>... Args>
+    requires (sizeof...(Args) == (1 * ... * Dims))
+  constexpr tensor(Args... args) : data{static_cast<T>(args)...} {}
+
   template <std::integral... Idx>
     requires(sizeof...(Idx) == rank)
   constexpr T& operator[](Idx... idx) {
+    std::array<std::size_t, rank> i{static_cast<std::size_t>(idx)...};
+    std::size_t flat = 0;
+    for (std::size_t k = 0; k < rank; ++k) {
+      flat = flat * dims[k] + i[k];
+    }
+    return data[flat];
+  }
+
+  template <std::integral... Idx>
+    requires(sizeof...(Idx) == rank)
+  constexpr const T& operator[](Idx... idx) const{
     std::array<std::size_t, rank> i{static_cast<std::size_t>(idx)...};
     std::size_t flat = 0;
     for (std::size_t k = 0; k < rank; ++k) {
@@ -48,7 +68,7 @@ class tensor {
 };
 
 template<size_t Skip, size_t R>
-constexpr std::array<size_t, R - 1> drop(std::array<size_t, R>& in) {
+constexpr std::array<size_t, R - 1> drop(const std::array<size_t, R>& in) {
   std::array<size_t, R - 1> res{};
 
   for(int i{}, o{}; i < R; ++i) {
@@ -92,6 +112,16 @@ constexpr std::array<std::size_t, R> unflatten(std::size_t flat, const std::arra
     return idx;
 }
 
+template <Numeric T, std::size_t... Dims>
+std::ostream& operator<<(std::ostream& os, const tensor<T, Dims...>& t) {
+    os << '[';
+    for (std::size_t i = 0; i < t.raw().size(); ++i) {
+        os << t.raw()[i];
+        if (i + 1 < t.raw().size()) os << ", ";
+    }
+    return os << ']';
+}
+
 template <std::size_t I, std::size_t J, Numeric T, std::size_t... A, std::size_t... B>
   requires (I < sizeof...(A) && J < sizeof...(B))
 [[nodiscard]] constexpr auto contract(const tensor<T, A...>& a, const tensor<T, B...>& b) {
@@ -123,3 +153,15 @@ template <std::size_t I, std::size_t J, Numeric T, std::size_t... A, std::size_t
   }
   return res;
 }
+
+template <Numeric T, size_t N>
+using vector = tensor<T, N>;
+
+template <Numeric T> using vec3 = tensor<T, 3>;
+template <Numeric T> using vec4 = tensor<T, 4>;
+
+template <Numeric T, size_t N, size_t M>
+using matrix = tensor<T, N, M>;
+
+template <Numeric T, size_t N>
+using square_matrix = tensor<T, N, N>;
