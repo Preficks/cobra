@@ -4,11 +4,19 @@
 #include <iostream>
 #include "src/tensor.hpp"
 #include "src/vec_ops.hpp"
+#include "src/mat_ops.hpp"
 #include <random>
 
+void bench();
+
 int main() {
+  bench();
+  return 0;
+}
+
+void bench() {
   const size_t trials = 100uz;
-  const size_t size = 100uz;
+  const size_t size = 500uz;
 
   auto mat1 = std::make_unique<matrix<double, size, size>>();
   auto mat2 = std::make_unique<matrix<double, size, size>>();
@@ -34,12 +42,10 @@ int main() {
   auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(elapsed_duration).count();
   auto microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_duration).count();
 
-  // Alternative: Convert directly to a floating-point representation of milliseconds
   std::chrono::duration<double, std::milli> milliseconds_fp = elapsed_duration;
 
   std::cout << "Elapsed time:\n";
   std::cout << "  " << nanoseconds << " ns\n";
   std::cout << "  " << microseconds << " µs\n";
   std::cout << "  " << milliseconds_fp.count() << " ms\n";
-
 }

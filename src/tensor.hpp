@@ -16,6 +16,11 @@ class tensor {
   static constexpr size_t size         = (1 * ... * Dims);
   static constexpr std::array<size_t, rank> dims{Dims...};
 
+  constexpr auto begin()       { return data.begin(); }
+  constexpr auto end()         { return data.end(); }
+  constexpr auto begin() const { return data.begin(); }
+  constexpr auto end()   const { return data.end(); }
+
   private:
   std::array<T, size> data;
 
@@ -62,6 +67,17 @@ class tensor {
     return *this;
   }
 };
+
+template<Numeric T, size_t... Dims>
+[[nodiscard]] constexpr bool allclose(const tensor<T, Dims...>& a, const tensor<T, Dims...>& b, T rtol = 1e-9, T atol = 1e-12) {
+  for(size_t i{}; i < a.size; ++i) {
+    const T diff = std::abs(a.data[i] - b.data[i]);
+    if(diff > atol && diff > rtol * std::abs(a.data[i])) {
+      return false;
+    }
+  }
+  return true;
+}
 
 template<size_t Skip, size_t R>
 constexpr std::array<size_t, R - 1> drop(const std::array<size_t, R>& in) {
@@ -150,14 +166,12 @@ template <std::size_t I, std::size_t J, Numeric T, std::size_t... A, std::size_t
   return res;
 }
 
-
 template <std::size_t R>
 constexpr std::size_t product(const std::array<std::size_t, R>& d, std::size_t from, std::size_t to) {
     std::size_t p = 1;
     for (std::size_t k = from; k < to; ++k) p *= d[k];
     return p;
 }
-
 
 template <std::size_t I, std::size_t J, Numeric T, std::size_t... A, std::size_t... B>
   requires (I < sizeof...(A) && J < sizeof...(B))
@@ -202,6 +216,7 @@ template <std::size_t I, std::size_t J, Numeric T, std::size_t... A, std::size_t
 
   return res;
 }
+
 
 template <Numeric T, size_t N>
 using vector = tensor<T, N>;

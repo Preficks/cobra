@@ -17,7 +17,6 @@ Elapsed time:
   695 µs
   0.695376 ms
 
-
 # After optimizations (ikj order) for standard contraction: 
 500 x 500 matrices: 
 
@@ -32,6 +31,4 @@ Elapsed time:
 Elapsed time:
   249578 ns
   249 µs
-  0.249578 ms
-
-10x speedup!
+  7.249578 ms
