@@ -11,8 +11,13 @@ constexpr tensor<T, Dims...> full(T value) {
   return res;
 }
 
+template<Numeric T, size_t... Dims>
+constexpr tensor<T, Dims...> filled(T value) { return full<T, Dims...>(value); }
+
 template <Numeric T, size_t... Dims>
-constexpr tensor<T, Dims...> ones(T value) { return full<T, Dims...>(1); }
+constexpr tensor<T, Dims...> ones() { return full<T, Dims...>(T{1}); }
+
+
 
 template <Numeric T, size_t N>
 constexpr square_matrix<T, N> identity(T value) {
