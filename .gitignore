@@ -1,1 +1,6 @@
+build/
+
+# Ignore object files and output files
+
 *.out
+*.o
