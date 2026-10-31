@@ -29,8 +29,8 @@ void bench() {
   double checksum = 0.0;
   auto start_time = std::chrono::steady_clock::now();
   for (std::size_t i = 0; i < trials; ++i) {
-      //auto res = contract1<1, 0>(*mat1, *mat2);
-      auto res = matmul_microkernel(*mat1, *mat2);
+      auto res = contract1<1, 0>(*mat1, *mat2);
+      //auto res = matmul_microkernel(*mat1, *mat2);
       checksum += res.raw()[i % res.size];
   }
   auto end_time = std::chrono::steady_clock::now();
